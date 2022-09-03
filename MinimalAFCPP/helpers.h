@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
-inline void print(const std::string& text) {
-	std::cout << text << std::endl;
-}
+void print(const std::string& text);
+void err(const std::string& text);
+
+typedef unsigned int uint;

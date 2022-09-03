@@ -1,15 +1,21 @@
 #include "helpers.h"
 #include "Window.h"
 
+#include<iostream>
+
+using namespace af;
+
 int main(void) {
-    if (!glfwInit()) {
-        print("couldn't init glfw");
+    if (af::init() != 0) {
+        print("couldn not init af :(");
         return -1;
     }
 
-    Window w = Window();
+    af::Window w = af::Window(1280, 720, "bro");
+    w.setState(af::WindowMode::MAXIMIZED);
+    w.run();
 
-    std::cin.get();
+    af::uninit();
 
     return 0;
 }

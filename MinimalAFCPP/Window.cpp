@@ -1,36 +1,70 @@
-#include"Window.h"
+#include"MinimalAF.h"
+using namespace af;
 
-Window::Window() {
-    GLFWwindow* window;
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        print("window wasnt created");
+Window::Window(int w, int h, const std::string& title) {
+    window = glfwCreateWindow(w, h, title.c_str(), NULL, NULL);
+    if (!window) {
+        print("window wasn't created");
         return;
     }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
 }
 
 Window::~Window() {
-    print("TODO: implement window destructor");
+    glfwDestroyWindow(window);
+    window = nullptr;
+}
+
+void af::Window::run() {
+    glfwMakeContextCurrent(window);
+
+    // this is an update/render loop.
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+}
+
+void af::Window::setState(WindowMode mode) {
+    if (mode == WindowMode::MAXIMIZED) {
+        glfwMaximizeWindow(window);
+    }
+    else if (mode == WindowMode::FULLSCREEN) {
+        print("TODO: implement window fullscreening");
+    }
+    else if (mode == WindowMode::MINIMIZED) {
+        glfwIconifyWindow(window);
+    }
+    else if (mode == WindowMode::WINDOWED) {
+        glfwRestoreWindow(window);
+    }
+}
+
+void af::Window::setSize(int w, int h) {
+    glfwSetWindowSize(window, w, h);
+}
+
+void af::Window::setTitle(const std::string& title) {
+    glfwSetWindowTitle(window, title.c_str());
+}
+
+SizeI af::Window::getSize() {
+    SizeI windowSize;
+    glfwGetWindowSize(window, &windowSize.width, &windowSize.height);
+
+    return windowSize;
+}
+
+int af::init() {
+    if (!glfwInit()) {
+        print("couldn't init glfw");
+        return -1;
+    }
+
+    return 0;
+}
+
+void af::uninit() {
+    print("glfwTerminate();");
+    glfwTerminate();
 }

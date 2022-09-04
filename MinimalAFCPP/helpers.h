@@ -14,6 +14,9 @@ inline void err(const std::string& text) {
 	std::cerr << text << std::endl;
 }
 
+inline void todo(const std::string& text) {
+	std::cerr << "This functionality has not yet been implemented: " << text << std::endl;
+}
 
 inline float max(float a, float b) {
     return a > b ? a : b;

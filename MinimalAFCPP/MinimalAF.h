@@ -5,8 +5,6 @@
 #include "Element.h"
 #include "IMDrawer.h"
 #include "Mesh.h"
-#include "Rect.h"
-#include "Rendering.h"
 #include "Shader.h"
 #include "Text.h"
 #include "Texture.h"

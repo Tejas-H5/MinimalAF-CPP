@@ -27,7 +27,6 @@ namespace af {
         std::string vertexSource;
         std::string fragmentSource;
     public:
-        inline Shader() : handle(0), modelLoc(0), viewLoc(0), projectionLoc(0), vertexSource(""), fragmentSource("") {};
         Shader(const std::string& vertexSource, const std::string& fragmentSource);
         ~Shader();
 

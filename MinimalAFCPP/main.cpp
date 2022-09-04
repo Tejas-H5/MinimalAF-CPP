@@ -67,7 +67,7 @@ int main(void) {
 
     App *a = new App();
 
-    a->setState(af::WindowMode::MAXIMIZED);
+    a->setTitle("bro, innit");
     a->run();
 
     delete a;

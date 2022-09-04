@@ -1,14 +1,16 @@
 #pragma once
-#include<string>
-#include "helpers.h"
+#include "../helpers.h"
 
 namespace af {
+
     struct Rect {
     public:
         float X0;
         float Y0;
         float X1;
         float Y1;
+
+        Rect() {}
 
         Rect(float x0, float y0, float x1, float y1)
             : X0(x0), Y0(y0), X1(x1), Y1(y1) {}

@@ -2,16 +2,9 @@
 #include<glm.hpp>
 #include<vector>
 #include "helpers.h"
+#include "Datatypes/Vertex.h"
 
 namespace af {
-    struct Vertex {
-        glm::vec3 position;
-        glm::vec2 uv;
-
-        Vertex(vec3 pos, vec2 uv)
-            : position(pos), uv(uv) {}
-    };
-
     class Mesh {
     private:
         Vertex* vertices;
@@ -28,9 +21,8 @@ namespace af {
         inline int getHandle() { return vao; }
         inline Vertex* getVertices() { return vertices; }
         inline uint* getIndices() { return indices; }
-
-        Mesh() : vertexCount(0), indexCount(0), vertexDrawCount(0), indexDrawCount(0), vertices(nullptr), 
-            indices(nullptr), vbo(0), ebo(0), vao(0) {};
+        inline uint getIndexCount() { return indexCount;  }
+        inline uint getVertexCount() { return vertexCount; }
 
         /// <summary>
         /// This mesh will take ownership of the verts and indices you pass in.

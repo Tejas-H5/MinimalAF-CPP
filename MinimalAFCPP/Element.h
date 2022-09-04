@@ -1,7 +1,6 @@
 #pragma once
 #include<vector>
 #include<glm.hpp>
-#include "Rect.h"
 
 /*
 namespace af {

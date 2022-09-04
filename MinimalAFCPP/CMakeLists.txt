@@ -12,15 +12,14 @@ target_sources(MinimalAFCPP PUBLIC
 	"helpers.h"
 	"Datatypes.h"
 	"Element.cpp" "Element.h"
-	"Rendering.cpp" "Rendering.h"
+	 
 	"IMDrawer.cpp" "IMDrawer.h"
 	"Mesh.cpp" "Mesh.h"
 	"Shader.cpp" "Shader.h"
 	"Texture.cpp" "Texture.h"
 	"Text.cpp" "Text.h"
 	"Color.h"
-	"Rect.h"
-)
+ "BufferedMeshOutput.h" "BufferedMeshOutput.cpp" "Datatypes/Vertex.h" "Datatypes/Rect.h")
 
 # TODO: Add tests and install targets if needed.
 target_link_libraries(MinimalAFCPP

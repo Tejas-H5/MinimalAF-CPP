@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Datatypes.h"
-#include "GLFW/glfw3.h"
 #include "helpers.h"
+
+#include"GL/glew.h"
+#include "GLFW/glfw3.h"
 
 #include<string>
 
@@ -22,8 +24,12 @@ namespace af {
 		GLFWwindow* window;
 
 	public:
+		virtual void initialize() = 0;
+		virtual void update() = 0;
+		virtual void render() = 0;
+
 		Window(int w, int h, const std::string& title);
-		~Window();
+		virtual ~Window();
 
 		void run();
 		void setState(WindowMode mode);

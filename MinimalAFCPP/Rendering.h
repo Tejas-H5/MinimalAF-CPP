@@ -4,10 +4,7 @@
 #include<GL/glew.h>
 
 namespace af {
-	public class RenderContext ctx {
-
-
-
+	class RenderContext {
 
 	};
 }

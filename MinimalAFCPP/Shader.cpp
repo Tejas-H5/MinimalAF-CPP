@@ -2,8 +2,8 @@
 
 using namespace af;
 
-static std::string InsertGlobals(std::string& string) {
-    int tStart = string.find("{{globals}}");
+static std::string InsertGlobals(std::string& vertexSource) {
+    int tStart = vertexSource.find("{{globals}}");
     int tEnd = tStart + 11;
 
     const char* s = "uniform mat4 model;\n"
@@ -12,7 +12,7 @@ static std::string InsertGlobals(std::string& string) {
         "layout(location = 0) in vec3 position;\n"
         "layout(location = 1) in vec2 uv;\n";
 
-    return string.replace(string.begin() + tStart, string.begin() + tEnd, s);
+    return vertexSource.replace(vertexSource.begin() + tStart, vertexSource.begin() + tEnd, s);
 }
 
 
@@ -61,9 +61,9 @@ static int LinkProgram(int vertexShader, int fragmentShader) {
     return program;
 }
 
-Shader::Shader(ShaderSources sources) {
-    std::string vertexSource = InsertGlobals(sources.vertexSource);
-    const std::string& fragmentSource = sources.fragmentSource;
+Shader::Shader(const std::string& vertexSourceIn, const std::string& fragmentSource) {
+    std::string vertexSource = std::string(vertexSourceIn);
+    vertexSource = InsertGlobals(vertexSource);
 
     int vertexShader = CompileShader(vertexSource, GL_VERTEX_SHADER);
     int fragmentShader = CompileShader(fragmentSource, GL_FRAGMENT_SHADER);

@@ -1,18 +1,19 @@
 #pragma once
-#include<glm/glm.hpp>
+#include<glm.hpp>
 #include<math.h>
 
 namespace af {
+    /// <summary>
+    /// floats, 0.0f to 1.0f
+    /// </summary>
+    static inline glm::vec4 rgb(float r, float g, float b, float a = 1.0f) {
+        return glm::vec4(r, g, b, a);
+    }
+
     static inline glm::vec4 rgb255(float r, float g, float b, float a = 1.0f) {
         return rgb(r/255.0f, g/255.0f, b/255.0f, a/255.0f);
     }
 
-    /// <summary>
-    /// floats, 0.0f to 1.0f
-    /// </summary>
-    static inline glm::vec4 rgb(float r, float g, float b, float a = 1.0f)  {
-        return glm::vec4(r, g, b, a);
-    }
 
     /// <summary>
     /// Make a color from HSV. Think of that colour circle you often see in drawing prorams,
@@ -24,7 +25,7 @@ namespace af {
     /// <returns></returns>
     static inline glm::vec4 hsv(float h, float s, float v, float a = 1.0f) {
         float c = v * s;
-        float x = c * (1 - std::abs(h / 60.0f) % 2 - 1);
+        float x = c * (1.0f - fmod(std::abs(h / 60.0f), 2.0f) - 1.0f);
         float m = v - c;
         float r = 0, g = 0, b = 0;
         if (h < 60) {

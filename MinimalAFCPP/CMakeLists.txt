@@ -9,7 +9,7 @@ add_executable (MinimalAFCPP "main.cpp" "helpers.h")
 target_sources(MinimalAFCPP PUBLIC 
 	"MinimalAF.h"
 	"Window.cpp" "Window.h"
-	"helpers.cpp" "helpers.h"
+	"helpers.h"
 	"Datatypes.h"
 	"Element.cpp" "Element.h"
 	"Rendering.cpp" "Rendering.h"
@@ -19,6 +19,7 @@ target_sources(MinimalAFCPP PUBLIC
 	"Texture.cpp" "Texture.h"
 	"Text.cpp" "Text.h"
 	"Color.h"
+	"Rect.h"
 )
 
 # TODO: Add tests and install targets if needed.

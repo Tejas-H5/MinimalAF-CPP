@@ -1,4 +1,5 @@
-#include"MinimalAF.h"
+#include"Window.h"
+
 using namespace af;
 
 Window::Window(int w, int h, const std::string& title) {
@@ -17,11 +18,25 @@ Window::~Window() {
 void af::Window::run() {
     glfwMakeContextCurrent(window);
 
+    if (glewInit() != GLEW_OK) {
+        print("glewInit() != GLEW_OK");
+        return;
+    }
+
+    initialize();
+
     // this is an update/render loop.
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window);
         glfwPollEvents();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // TODO: make render and update happen at different intervals
+        // TODO: also give them the deltatime somehow. static class or pass it in as an arg here
+        update();
+        render();
+
+        glfwSwapBuffers(window);
     }
 }
 
@@ -60,6 +75,7 @@ int af::init() {
         print("couldn't init glfw");
         return -1;
     }
+
 
     return 0;
 }

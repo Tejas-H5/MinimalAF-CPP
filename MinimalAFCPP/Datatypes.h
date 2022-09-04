@@ -8,7 +8,7 @@ namespace af {
 	struct SizeI {
 		int width; int height;
 		inline SizeI(int w, int h) : width(w), height(h) {}
-		inline SizeI() {}
+		inline SizeI() : width(0), height(0) {}
 	};
 
 	enum class CapType {

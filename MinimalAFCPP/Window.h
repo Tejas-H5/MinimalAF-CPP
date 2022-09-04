@@ -3,6 +3,7 @@
 #include "Datatypes.h"
 #include "Texture.h"
 #include "helpers.h"
+#include "Shader.h"
 #include "BufferedMeshOutput.h"
 
 #include"GL/glew.h"
@@ -57,6 +58,19 @@ namespace af {
 		CapType capType;
 	};
 
+	struct CurrentTextureState {
+
+	};
+
+	struct CurrentFramebufferState {
+
+	};
+
+	struct CurrentShaderState {
+		mat4 model, view, projection;
+		Shader* currentShader; // non-owning
+	};
+
 	class Window {
 	private:
 		GLFWwindow* window;
@@ -70,27 +84,22 @@ namespace af {
 		NGonDrawState ngonState;
 		NLineDrawState nlineState;
 		ArcDrawState arcState;
+		CurrentTextureState textureState;
+		CurrentFramebufferState framebufferState;
+		CurrentShaderState shaderState;
 
 		BufferedMeshOutput* meshOutput;
+		InternalShader* internalShader;
+
+
 																																										
 /*
+* 
+* 
 			internal static TextureManager Texture = > s_textureManager;
 			internal static FramebufferManager Framebuffer = > s_framebufferManager;
-			public static ShaderManager Shader = > s_shaderManager;
-			private static TextDrawer<Vertex> s_textDrawer;
-			private static MeshOutputStream<Vertex> s_meshOutputStream;
-			private static ImmediateMode2DDrawer<Vertex> s_imDrawer;
-			private static readonly VertexCreator s_vertexCreator = new VertexCreator();
-			private static TextureManager s_textureManager;
-			private static FramebufferManager s_framebufferManager;
-			private static ShaderManager s_shaderManager;
-			private static InternalShader s_internalShader;
-			public static Texture InternalFontTexture = > s_textDrawer.ActiveFont.FontTexture;
-			public static int TimesVertexThresholdReached {
-			public static int TimesIndexThresholdReached {
-			public static float VertexToIndexRatio = > (float)TimesVertexThresholdReached / (float)TimesIndexThresholdReached;
-			internal static void SetScreenWidth(int width, int height) {
-			internal static void Init(IGLFWGraphicsContext context) {
+			public static ShaderManager Shader = > s_shaderManager
+
 			internal static Color GetClearColor() {
 			internal static void SetClearColor(Color color) {
 			internal static void Clear() {
@@ -113,8 +122,6 @@ namespace af {
 			private static void StartStencilling(bool canDraw, bool inverseStencil) {
 			internal static void StartUsingStencil() {
 			internal static void LiftStencil() {
-			private static bool disposed = false;
-			public static void Dispose(bool disposing) {
 
 				*/
 
@@ -201,6 +208,38 @@ namespace af {
 		float getTextStringHeight(std::string s);
 		float getTextStringHeight(std::string s, int start, int end);
 		float getTextStringWidth(std::string s);
+
+		// --- gl stuff
+		vec4 getClearColor();
+		void setClearColor(vec4 color);
+		void clear();
+		void flush();
+		void swapBuffers();
+
+		// --- internal shader uniforms state
+		void setViewport(Rect screenRect);
+		void cartesian2D(float scaleX = 1, float scaleY = 1, float offsetX = 0, float offsetY = 0);
+		void viewLookAt(vec3 position, vec3 target, vec3 up);
+		void viewOrientation(vec3 position, quat rotation);
+		void perspective(float fovy, float aspect, float depthNear, float depthFar, float centerX = 0, float centerY = 0);
+		void orthographic(float width, float height, float depthNear, float depthFar, float centerX = 0, float centerY = 0);
+		void setProjection(mat4 matrix);
+		void setBackfaceCulling(bool onOrOff);
+		void setTransform(mat4 matrix);
+		void setDrawColor(vec4 col);
+
+		// --- stencilling 
+		void startStencillingWhileDrawing(bool inverseStencil = false);
+		void startStencillingWithoutDrawing(bool inverseStencil = false);
+		void startStencilling(bool canDraw, bool inverseStencil);
+		void startUsingStencil();
+		void liftStencil();
+
+
+		void setModelMatrix(mat4 matrix);
+		void setProjectionMatrix(mat4 matrix);
+		void setViewMatrix(mat4 matrix);
+		void useShader(Shader* s, bool updateUniforms = true);
 	};
 }
 

@@ -10,7 +10,7 @@ namespace af {
         float X1;
         float Y1;
 
-        Rect() {}
+        Rect() : X0(0), Y0(0), X1(0), Y1(0) {}
 
         Rect(float x0, float y0, float x1, float y1)
             : X0(x0), Y0(y0), X1(x1), Y1(y1) {}

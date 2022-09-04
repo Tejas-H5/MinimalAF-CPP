@@ -83,10 +83,11 @@ Shader::Shader(const std::string& vertexSourceIn, const std::string& fragmentSou
         uniformLocations[std::string(name, len)] = location;
     }
 
-    modelLoc = uniformLocations["model"];
-    viewLoc = uniformLocations["view"];
-    projectionLoc = uniformLocations["projection"];
+    modelLoc = loc("model");
+    viewLoc = loc("view");
+    projectionLoc = loc("projection");
 }
+
 
 Shader::~Shader() {
     glDeleteProgram(handle);

@@ -34,7 +34,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 Window* Window::s_instance = NULL;
 
-Window::Window(int w, int h, const std::string& title) {
+Window::Window(int w, int h, const std::string& title) : meshOutput(NULL) {
     window = glfwCreateWindow(w, h, title.c_str(), NULL, NULL);
 
     if (!window) {
@@ -48,6 +48,9 @@ Window::Window(int w, int h, const std::string& title) {
 
     // TODO: fine-tune this size
     meshOutput = new BufferedMeshOutput(8 * 4096, 8 * 4096);
+    internalShader = new InternalShader();
+
+    shaderState.currentShader = internalShader;
 }
 
 
@@ -58,6 +61,7 @@ Window::~Window() {
     Window::s_instance = NULL;
 
     delete meshOutput;
+    delete internalShader;
 }
 
 void af::Window::run() {
@@ -639,4 +643,207 @@ float af::Window::getTextStringHeight(std::string s, int start, int end) {
 
 float af::Window::getTextStringWidth(std::string s) {
     return 0.0f;
+}
+
+vec4 af::Window::getClearColor() {
+    return clearColor;
+}
+
+void af::Window::setClearColor(vec4 color) {
+    clearColor = color;
+    glClearColor(color.x, color.y, color.z, color.w);
+}
+
+void af::Window::clear() {
+    glStencilMask(1);
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+void af::Window::flush() {
+    meshOutput->flush();
+}
+
+void af::Window::swapBuffers() {
+    flush();
+    // s_framebufferManager.Use(null);
+    // s_shaderManager.SetModelMatrix(Matrix4.Identity);
+
+    glfwSwapBuffers(window);
+
+    meshOutput->timesIndexThresholdReached = 0;
+    meshOutput->timesVertexThresholdReached = 0;
+}
+
+void af::Window::setViewport(Rect screenRect) {
+    screenRect = screenRect.rectified();
+
+    glViewport((int)screenRect.X0, (int)screenRect.Y0, (int)screenRect.getWidth(), (int)screenRect.getHeight());
+}
+
+void af::Window::cartesian2D(float scaleX, float scaleY, float offsetX, float offsetY) {
+    flush();
+
+    float width = scaleX * windowSize.width;
+    float height = scaleY * windowSize.height;
+
+    mat4 viewMatrix = translation(vec3(offsetX - width / 2, offsetY - height / 2, 0));
+
+    mat4 projectionMatrix = scale(vec3(2.0f / width, 2.0f / height, 1));
+
+    // s_shaderManager.SetViewMatrix(viewMatrix);
+    setProjection(projectionMatrix);
+    glDepthFunc(GL_LEQUAL);
+}
+
+void af::Window::viewLookAt(vec3 position, vec3 target, vec3 up) {
+    mat4 lookAt = glm::lookAt(position, target, up);
+
+    // s_shaderManager.SetViewMatrix(lookAt);
+}
+
+void af::Window::viewOrientation(vec3 position, quat rot) {
+    mat4 orienation = translation(-position);
+    orienation *= rotation(rot);
+
+    // s_shaderManager.SetViewMatrix(orienation);
+}
+
+void af::Window::perspective(float fovy, float aspect, float depthNear, float depthFar, float centerX, float centerY) {
+    mat4 perspective = glm::perspective(fovy, aspect, depthNear, depthFar) *
+        translation(vec3(centerX / (float)windowSize.width, centerY / (float)windowSize.height, 0));
+
+    setProjection(perspective);
+}
+
+void af::Window::orthographic(float width, float height, float depthNear, float depthFar, float centerX, float centerY) {
+    // TODO: test this function, it is different from what we had before in the C# implementation
+    mat4 ortho = glm::ortho(0.0f, width, 0.0f, height, depthNear, depthFar);
+    ortho = ortho * translation(vec3(centerX / (float)windowSize.width, centerY / (float)windowSize.height, 0));
+
+    setProjection(ortho);
+}
+
+void af::Window::setProjection(mat4 matrix) {
+    // s_shaderManager.SetProjectionMatrix(matrix);
+}
+
+void af::Window::setBackfaceCulling(bool onOrOff) {
+    if (onOrOff) {
+        glEnable(GL_CULL_FACE);
+    }
+    else {
+        glDisable(GL_CULL_FACE);
+    }
+}
+
+void af::Window::setTransform(mat4 matrix) {
+    // s_shaderManager.SetModelMatrix(matrix);
+}
+
+void af::Window::setDrawColor(vec4 col) {
+    //if (s_internalShader.Color == col)
+//        return;
+
+    flush();
+
+    // s_internalShader.Color = col;
+}
+
+
+/// <summary>
+/// Clears and enables the stencil buffer, doesn't disable colour writes.
+/// </summary>
+/// <param name="inverseStencil">If this parameter is set to true, the buffer will be cleared to 1s and
+/// we will be drawing 0s to the stencil buffer, and vice versa.</param>
+void af::Window::startStencillingWhileDrawing(bool inverseStencil) {
+    startStencilling(true, inverseStencil);
+}
+
+
+/// <summary>
+/// Clears and enables the stencil buffer, and then disables colour writes
+/// </summary>
+/// <param name="inverseStencil">If this parameter is set to true, the buffer will be cleared to 1s and
+/// we will be drawing 0s to the stencil buffer, and vice versa.</param>
+void af::Window::startStencillingWithoutDrawing(bool inverseStencil) {
+    startStencilling(false, inverseStencil);
+}
+
+
+void af::Window::startStencilling(bool canDraw, bool inverseStencil) {
+    flush();
+
+    if (!canDraw) {
+        glColorMask(false, false, false, false);
+    }
+
+    if (inverseStencil) {
+        glClearStencil(1);
+    }
+    else {
+        glClearStencil(0);
+    }
+
+    glStencilMask(1);
+    glClear(GL_STENCIL_BUFFER_BIT);
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    if (inverseStencil) {
+        glStencilFunc(GL_ALWAYS, 0, 0);
+    }
+    else {
+        glStencilFunc(GL_ALWAYS, 1, 1);
+    }
+}
+
+void af::Window::startUsingStencil() {
+    flush();
+
+    glColorMask(true, true, true, true);
+    glStencilFunc(GL_NOTEQUAL, 1, 1);
+    glStencilMask(0);
+}
+
+void af::Window::liftStencil() {
+    flush();
+
+    glDisable(GL_STENCIL_TEST);
+}
+
+void af::Window::setModelMatrix(mat4 matrix) {
+    flush();
+
+    shaderState.model = matrix;
+    shaderState.currentShader->setModel(matrix);
+}
+
+void af::Window::setProjectionMatrix(mat4 matrix) {
+    flush();
+
+    shaderState.projection = matrix;
+    shaderState.currentShader->setProjection(matrix);
+}
+
+void af::Window::setViewMatrix(mat4 matrix) {
+    flush();
+
+    shaderState.view = matrix;
+    shaderState.currentShader->setView(matrix);
+}
+
+void af::Window::useShader(Shader* s, bool updateUniforms) {
+    if (s == shaderState.currentShader)
+        return;
+
+    shaderState.currentShader = s;
+    
+    if (updateUniforms) {
+        shaderState.currentShader->setModel(shaderState.model);
+        shaderState.currentShader->setView(shaderState.view);
+        shaderState.currentShader->setModel(shaderState.projection);
+    }
 }

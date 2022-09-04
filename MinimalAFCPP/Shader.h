@@ -6,6 +6,7 @@
 #include"glm.hpp"
 #include"gtc/type_ptr.hpp"
 #include<iostream>
+#include"helpers.h"
 
 namespace af {
     /// <summary>
@@ -71,6 +72,51 @@ namespace af {
         inline void setVec4(GLint uniformLocation, glm::vec4 data) {
             use();
             glUniform4f(uniformLocation, data.x, data.y, data.z, data.w);
+        }
+
+        inline void setModel(mat4 m) {
+            setMatrix4(modelLoc, m);
+        }
+
+        inline void setView(mat4 m) {
+            setMatrix4(viewLoc, m);
+        }
+
+        inline void setProjection(mat4 m) {
+            setMatrix4(projectionLoc, m);
+        }
+    };
+
+    class InternalShader : public Shader {
+    private:
+        vec4 color; uint colorLoc;
+    public:
+        InternalShader() : Shader(
+            // vertex shader
+            "#version 330\n"
+            "{{globals}}\n"
+            "out vec2 uv0;\n"
+            "void main(){\n"
+            "    gl_Position =  vec4(position, 1) * model * view * projection;\n"
+            "    uv0 = uv;\n"
+            "}\n",
+            // fragment shader
+            "#version 330\n"
+            "uniform vec4 color;\n"
+            "uniform sampler2D sampler;\n"
+            "in vec2 uv0;\n"
+            "void main(){\n"
+            "    vec4 texColor = texture2D(sampler, uv0.xy);\n"
+            "    gl_FragColor = color * texColor;\n"
+            "}\n"
+        ), color(vec4(0,0,0,0)), colorLoc(0) {
+            colorLoc = loc("color");
+        }
+
+        inline vec4 getColor() { return color; }
+        inline void setColor(vec4 col) {
+            color = col;
+            setVec4(colorLoc, col);
         }
     };
 }

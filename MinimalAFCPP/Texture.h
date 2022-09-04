@@ -1,11 +1,12 @@
 #pragma once
 #include "helpers.h"
+#include <GL/glew.h>
 
 namespace af {
 	enum class FilteringType {
 		NearestNeighbour,
 		Bilinear
-	}
+	};
 
 	/*
 	struct TextureImportSettings {
@@ -16,16 +17,15 @@ namespace af {
 		internal PixelFormat PixelFormatType = PixelFormat.Bgra;
 	}*/
 
-	Texture loadFromFile(std::string path, TextureImportSettings settings = null);
-
 	class Texture {
 	private:
+		GLint handle;
+		int width, height;
+		std::string path;
 	public:
-		Texture(int width, int height, TextureImportSettings settings);
-		Texture(SKBitmap image, TextureImportSettings settings = null);
-		void Resize(int width, int height);
-		void Init(int width, int height, int* data, TextureImportSettings settings);
-		void BindTextureHandle();
-		void Use(GLenum unit);
+		Texture(int width, int height);
+		Texture(const std::string& path);
+
+		~Texture();
 	};
 }

@@ -59,7 +59,8 @@ namespace af {
 	};
 
 	struct CurrentTextureState {
-
+		Texture* currentTexture = nullptr;
+		bool globalTextureChanged = true;
 	};
 
 	struct CurrentFramebufferState {
@@ -90,8 +91,9 @@ namespace af {
 
 		BufferedMeshOutput* meshOutput;
 		InternalShader* internalShader;
+		Texture* nullTexture;	// a 1x1 white square
 
-
+		void initSelf();
 																																										
 /*
 * 
@@ -131,6 +133,7 @@ namespace af {
 		static Window* s_instance;
 
 		void onResize(GLFWwindow* window, int width, int height);
+		void onTextureLoaded(Texture* t);
 
 		virtual void initialize() = 0;
 		virtual void update() = 0;
@@ -200,8 +203,8 @@ namespace af {
 		float getTextWidth(char c);
 		float getTextHeight(char c);
 		vec2 getTextSize(char c);
+		// Texture getTextTexture();
 
-		Texture getTextTexture();
 		vec2 drawText(std::string text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
 		vec2 drawText(std::string text, float startX, float startY, float scale = 1.0f);
 		vec2 drawText(std::string text, int start, int end, float startX, float startY, float scale);
@@ -227,6 +230,10 @@ namespace af {
 		void setBackfaceCulling(bool onOrOff);
 		void setTransform(mat4 matrix);
 		void setDrawColor(vec4 col);
+		void setModelMatrix(mat4 matrix);
+		void setProjectionMatrix(mat4 matrix);
+		void setViewMatrix(mat4 matrix);
+		void useShader(Shader* s, bool updateUniforms = true);
 
 		// --- stencilling 
 		void startStencillingWhileDrawing(bool inverseStencil = false);
@@ -235,11 +242,9 @@ namespace af {
 		void startUsingStencil();
 		void liftStencil();
 
+		// --- texture management
+		void setTexture(Texture* texture);
 
-		void setModelMatrix(mat4 matrix);
-		void setProjectionMatrix(mat4 matrix);
-		void setViewMatrix(mat4 matrix);
-		void useShader(Shader* s, bool updateUniforms = true);
 	};
 }
 

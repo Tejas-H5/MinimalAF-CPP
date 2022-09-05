@@ -8,6 +8,11 @@ namespace af {
 		Bilinear
 	};
 
+	enum class ClampingType {
+		Repeat,
+		ClampToEdge
+	};
+
 	/*
 	struct TextureImportSettings {
 		public FilteringType Filtering = FilteringType.Bilinear;
@@ -17,14 +22,30 @@ namespace af {
 		internal PixelFormat PixelFormatType = PixelFormat.Bgra;
 	}*/
 
+	struct TextureImportSettings {
+		FilteringType filtering;
+		ClampingType clampingType;
+	};
+
 	class Texture {
 	private:
-		GLint handle;
-		int width, height;
+		int width, height, numChannels;
+
+		GLuint textureID;
+
 		std::string path;
+		TextureImportSettings settings;
+
+		bool init(unsigned char* data);
 	public:
-		Texture(int width, int height);
-		Texture(const std::string& path);
+		Texture(int width, int height, TextureImportSettings settings);
+		Texture(const std::string& path, TextureImportSettings settings);
+		Texture(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings);
+
+		inline void use(GLenum textureUnit) {
+			glActiveTexture(textureUnit);
+			glBindTexture(GL_TEXTURE_2D, textureID);
+		}
 
 		~Texture();
 	};

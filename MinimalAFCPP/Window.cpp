@@ -28,6 +28,11 @@ void af::Window::onResize(GLFWwindow* window, int width, int height) {
 
 }
 
+void af::Window::onTextureLoaded(Texture* t) {
+    textureState.currentTexture = t;
+    textureState.globalTextureChanged = true;
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     Window::s_instance->onResize(window, width, height);
 }
@@ -45,14 +50,22 @@ Window::Window(int w, int h, const std::string& title) : meshOutput(NULL) {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     Window::s_instance = this;
+}
 
+void af::Window::initSelf() {
     // TODO: fine-tune this size
     meshOutput = new BufferedMeshOutput(8 * 4096, 8 * 4096);
     internalShader = new InternalShader();
-
     shaderState.currentShader = internalShader;
-}
 
+    // make a 1x1 white pixel the null texture
+    unsigned char* pixel = new unsigned char[] {0xFF, 0xFF, 0xFF, 0xFF};
+    TextureImportSettings pixelImportSettings = TextureImportSettings();
+    pixelImportSettings.clampingType = ClampingType::Repeat;
+    pixelImportSettings.filtering = FilteringType::Bilinear;
+    nullTexture = new Texture(1, 1, 4, pixel, pixelImportSettings);
+    delete pixel;
+}
 
 Window::~Window() {
     glfwDestroyWindow(window);
@@ -62,6 +75,7 @@ Window::~Window() {
 
     delete meshOutput;
     delete internalShader;
+    delete nullTexture;
 }
 
 void af::Window::run() {
@@ -71,6 +85,8 @@ void af::Window::run() {
         print("glewInit() != GLEW_OK");
         return;
     }
+
+    initSelf();
 
     initialize();
 
@@ -85,7 +101,7 @@ void af::Window::run() {
         update();
         render();
 
-        glfwSwapBuffers(window);
+        swapBuffers();
     }
 }
 
@@ -617,9 +633,10 @@ vec2 af::Window::getTextSize(char c) {
     return vec2();
 }
 
-Texture af::Window::getTextTexture() {
-    return Texture();
-}
+//Texture af::Window::getTextTexture() {
+    // return Texture();
+    // TODO
+//}
 
 vec2 af::Window::drawText(std::string text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
     return vec2();
@@ -668,7 +685,7 @@ void af::Window::flush() {
 void af::Window::swapBuffers() {
     flush();
     // s_framebufferManager.Use(null);
-    // s_shaderManager.SetModelMatrix(Matrix4.Identity);
+    setModelMatrix(glm::identity<mat4>());
 
     glfwSwapBuffers(window);
 
@@ -743,12 +760,12 @@ void af::Window::setTransform(mat4 matrix) {
 }
 
 void af::Window::setDrawColor(vec4 col) {
-    //if (s_internalShader.Color == col)
-//        return;
+    if (internalShader->getColor()  == col)
+        return;
 
     flush();
 
-    // s_internalShader.Color = col;
+    internalShader->setColor(col);
 }
 
 
@@ -812,6 +829,23 @@ void af::Window::liftStencil() {
     flush();
 
     glDisable(GL_STENCIL_TEST);
+}
+
+void af::Window::setTexture(Texture* texture) {
+    bool textureChanged = textureState.currentTexture != texture || textureState.globalTextureChanged;
+    if (!textureChanged) {
+        return;
+    }
+
+    flush();
+
+    textureState.currentTexture = texture;
+    if (texture == nullptr) {
+        nullTexture->use(GL_TEXTURE0);
+    }
+    else {
+        texture->use(GL_TEXTURE0);
+    }
 }
 
 void af::Window::setModelMatrix(mat4 matrix) {

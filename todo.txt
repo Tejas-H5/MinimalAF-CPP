@@ -8,3 +8,7 @@ Done:
 
 -> Move over all the render context functions
 -> internal shader
+
+Issues:
+
+Exception thrown at 0x0000000075F6D5D4 (tmmon64.dll) in MinimalAFCPP.exe: 0xC0000005: Access violation writing location 0x00007FFDD8F81DC0.

@@ -15,3 +15,6 @@ target_include_directories(MinimalAFCPP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/s
 target_include_directories(MinimalAFCPP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/submodules/glew/include)
 target_include_directories(MinimalAFCPP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/submodules/glm/glm)
 target_include_directories(MinimalAFCPP PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/local/stbimage)
+
+
+file(COPY res DESTINATION ${CMAKE_BINARY_DIR}/MinimalAFCPP)

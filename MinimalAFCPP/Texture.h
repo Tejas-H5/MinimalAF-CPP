@@ -25,6 +25,10 @@ namespace af {
 	struct TextureImportSettings {
 		FilteringType filtering;
 		ClampingType clampingType;
+
+	public:
+		inline TextureImportSettings(FilteringType filtering, ClampingType clamping) :
+			filtering(filtering), clampingType(clamping) {}
 	};
 
 	class Texture {

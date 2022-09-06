@@ -1,11 +1,11 @@
--> Move over Texture class
-- Re-implement text rendering, possibly with FreeType
+-> Re-implement text rendering, possibly with FreeType
 	- https://learnopengl.com/In-Practice/Text-Rendering
 - Re-implement audio rendering
 - (Re?) implemement testing harness
 
 Done:
 
+-> Move over Texture class
 -> Move over all the render context functions
 -> internal shader
 

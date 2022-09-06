@@ -60,9 +60,11 @@ void af::Window::initSelf() {
 
     // make a 1x1 white pixel the null texture
     unsigned char* pixel = new unsigned char[] {0xFF, 0xFF, 0xFF, 0xFF};
-    TextureImportSettings pixelImportSettings = TextureImportSettings();
-    pixelImportSettings.clampingType = ClampingType::Repeat;
-    pixelImportSettings.filtering = FilteringType::Bilinear;
+    TextureImportSettings pixelImportSettings = TextureImportSettings(
+        FilteringType::Bilinear, 
+        ClampingType::Repeat
+    );
+
     nullTexture = new Texture(1, 1, 4, pixel, pixelImportSettings);
     delete pixel;
 }

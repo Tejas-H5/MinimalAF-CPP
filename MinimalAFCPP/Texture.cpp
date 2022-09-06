@@ -40,6 +40,7 @@ af::Texture::Texture(int width, int height, TextureImportSettings settings) : se
 }
 
 af::Texture::Texture(const std::string& path, TextureImportSettings settings) : settings(settings) {
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
 
 	if (data) {
@@ -49,6 +50,7 @@ af::Texture::Texture(const std::string& path, TextureImportSettings settings) : 
 	}
 	else {
 		std::cerr << "Failed to load texture: " << path << std::endl;
+		std::cerr << "error: " << path << std::endl;
 	}
 
 	stbi_image_free(data);

@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "helpers.h"
 #include "Shader.h"
+#include "Text.h"
 #include "BufferedMeshOutput.h"
 
 #include"GL/glew.h"
@@ -63,6 +64,10 @@ namespace af {
 		bool globalTextureChanged = true;
 	};
 
+	struct CurrentFontState {
+		Font* currentFont = nullptr;
+	};
+
 	struct CurrentFramebufferState {
 
 	};
@@ -88,6 +93,7 @@ namespace af {
 		CurrentTextureState textureState;
 		CurrentFramebufferState framebufferState;
 		CurrentShaderState shaderState;
+		CurrentFontState fontState;
 
 		BufferedMeshOutput* meshOutput;
 		InternalShader* internalShader;
@@ -197,20 +203,15 @@ namespace af {
 		void drawLineDefaultCapOutline(float thickness, float x0, float y0, float radius, float angle);
 		void drawLineCircleCapOutline(float thickness, float x0, float y0, float radius, float angle);
 
-		void setTextFont(std::string name, int size);
-		float getTextWidth();
-		float getTextHeight();
-		float getTextWidth(char c);
-		float getTextHeight(char c);
-		vec2 getTextSize(char c);
+		void setFont(Font* font);
 		// Texture getTextTexture();
 
-		vec2 drawText(std::string text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
-		vec2 drawText(std::string text, float startX, float startY, float scale = 1.0f);
-		vec2 drawText(std::string text, int start, int end, float startX, float startY, float scale);
-		float getTextStringHeight(std::string s);
-		float getTextStringHeight(std::string s, int start, int end);
-		float getTextStringWidth(std::string s);
+		vec2 drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
+		vec2 drawText(const std::string& text, float startX, float startY, float scale = 1.0f);
+		vec2 drawText(const std::string& text, int start, int end, float startX, float startY, float scale);
+		float getTextStringHeight(const std::string& s);
+		float getTextStringHeight(const std::string& s, int start, int end);
+		float getTextStringWidth(const std::string& s);
 
 		// --- gl stuff
 		vec4 getClearColor();
@@ -227,12 +228,10 @@ namespace af {
 		void perspective(float fovy, float aspect, float depthNear, float depthFar, float centerX = 0, float centerY = 0);
 		void orthographic(float width, float height, float depthNear, float depthFar, float centerX = 0, float centerY = 0);
 		void setProjection(mat4 matrix);
+		void setModel(mat4 matrix);
+		void setView(mat4 matrix);
 		void setBackfaceCulling(bool onOrOff);
-		void setTransform(mat4 matrix);
 		void setDrawColor(vec4 col);
-		void setModelMatrix(mat4 matrix);
-		void setProjectionMatrix(mat4 matrix);
-		void setViewMatrix(mat4 matrix);
 		void useShader(Shader* s, bool updateUniforms = true);
 
 		// --- stencilling 
@@ -244,6 +243,7 @@ namespace af {
 
 		// --- texture management
 		void setTexture(Texture* texture);
+		inline Texture* getTexture() { return textureState.currentTexture; }
 
 	};
 }

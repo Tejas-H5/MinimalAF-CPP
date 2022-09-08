@@ -97,7 +97,7 @@ namespace af {
             "{{globals}}\n"
             "out vec2 uv0;\n"
             "void main(){\n"
-            "    gl_Position =  vec4(position, 1) * model * view * projection;\n"
+            "    gl_Position =  projection * view * model * vec4(position, 1);\n"
             "    uv0 = uv;\n"
             "}\n",
             // fragment shader

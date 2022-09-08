@@ -27,4 +27,5 @@ target_sources(MinimalAFCPP PUBLIC
 target_link_libraries(MinimalAFCPP
 	libglew_static
 	glfw
+	freetype
 )

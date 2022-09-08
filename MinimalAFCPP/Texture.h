@@ -5,7 +5,7 @@
 namespace af {
 	enum class FilteringType {
 		NearestNeighbour,
-		Bilinear
+		Bilinear	// TODO: rename to just 'Linear'
 	};
 
 	enum class ClampingType {
@@ -46,7 +46,8 @@ namespace af {
 		Texture(const std::string& path, TextureImportSettings settings);
 		Texture(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings);
 
-		inline void use(GLenum textureUnit) {
+		// Please use the window.setTexture(this) wrapper instead of this->use(), otherwise state won't be intact anymore
+		inline void use(GLenum textureUnit = GL_TEXTURE0) {
 			glActiveTexture(textureUnit);
 			glBindTexture(GL_TEXTURE_2D, textureID);
 		}

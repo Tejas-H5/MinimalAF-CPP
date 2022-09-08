@@ -19,8 +19,29 @@ bool af::Texture::init(unsigned char* data) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filtering);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filtering);
 
-	GLenum internalFormat = numChannels == 3 ? GL_RGB : GL_RGBA;
-	GLenum imageFormat = numChannels == 3 ? GL_RGB : GL_RGBA;
+
+	GLenum imageFormat = numChannels == 4 ? GL_RGBA :
+		numChannels == 3 ? GL_RGB :
+		numChannels == 2 ? GL_RG :
+		numChannels == 1 ? GL_RED :
+		-1;
+
+	GLenum internalFormat = numChannels == 4 ? GL_RGBA : 
+		numChannels == 3 ? GL_RGBA :	// convert RGB to RGBA
+		numChannels == 2 ? GL_RG :
+		numChannels == 1 ? GL_RED :
+		-1;
+
+
+	// This is an invalid format
+	assert(internalFormat != -1);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, numChannels == 4 ? 4 :
+		numChannels == 3 ? 4 :
+		numChannels == 2 ? 2 :
+		numChannels == 1 ? 1 :
+		0	// unreachable code
+	);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, imageFormat, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D); // TODO: try disabling this, that's how we had it before in C# land
@@ -44,8 +65,6 @@ af::Texture::Texture(const std::string& path, TextureImportSettings settings) : 
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
 
 	if (data) {
-		// don't allow anything other than 3 or 4 channel images
-		assert(numChannels == 3 || numChannels == 4);
 		init(data);
 	}
 	else {

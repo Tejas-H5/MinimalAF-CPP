@@ -41,6 +41,7 @@ Window* Window::s_instance = NULL;
 
 Window::Window(int w, int h, const std::string& title) : meshOutput(NULL) {
     window = glfwCreateWindow(w, h, title.c_str(), NULL, NULL);
+    windowSize = SizeI(w, h);
 
     if (!window) {
         print("window wasn't created");
@@ -66,7 +67,10 @@ void af::Window::initSelf() {
     );
 
     nullTexture = new Texture(1, 1, 4, pixel, pixelImportSettings);
-    delete pixel;
+    delete[] pixel;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 Window::~Window() {
@@ -94,14 +98,22 @@ void af::Window::run() {
 
     // this is an update/render loop.
     while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        /* Update part */ {
+            glfwPollEvents();
 
-        // TODO: make render and update happen at different intervals
-        // TODO: also give them the deltatime somehow. static class or pass it in as an arg here
-        update();
-        render();
+
+            // TODO: make render and update happen at different intervals
+            // TODO: also give them the deltatime somehow. static class or pass it in as an arg here
+            update();
+        }
+
+        /* Render part*/ {
+            glClear(GL_COLOR_BUFFER_BIT);
+            cartesian2D(1, 1);
+
+            render();
+        }
 
         swapBuffers();
     }
@@ -139,7 +151,7 @@ SizeI af::Window::getSize() {
 
 // ---- Rendering functions
 static Vertex vertex2D(float x, float y, float u, float v) {
-    return Vertex(vec3(x, y, 0), vec2(0, v));
+    return Vertex(vec3(x, y, 0), vec2(u, v));
 }
 
 void af::Window::drawTriangle(Vertex v1, Vertex v2, Vertex v3) {
@@ -611,56 +623,55 @@ void af::Window::drawLineCircleCapOutline(float thickness, float x0, float y0, f
     drawArcOutline(thickness, x0, y0, radius, angle, angle + M_PI);
 }
 
-void af::Window::setTextFont(std::string name, int size) {
-
+void af::Window::setFont(Font* font) {
+    fontState.currentFont = font;
 }
 
-float af::Window::getTextWidth() {
-    return 0.0f;
+
+vec2 af::Window::drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
+    Font* font = fontState.currentFont;
+    for (auto c = text.begin(); c != text.end(); c++) {
+        Character* charInfo;
+        if (!font->getChar(*c, &charInfo)) {
+            continue;
+        }
+
+        float x = startX + charInfo->bearing.x * scale;
+        float y = startY + (charInfo->bearing.y - charInfo->size.y) * scale;
+
+        float w = charInfo->size.x * scale;
+        float h = charInfo->size.y * scale;
+
+// reee. TODO: font atlas. rect packing ? nah just a long ass image like I was doing it before
+        setTexture(charInfo->tex);
+        drawRect(x, y, x + w, y + h);
+
+        startX += (charInfo->advance >> 6) * scale;  // bitshift by 6 to get value in pixels (2^6 = 64) (this is just what that tutorial said. seems a bit sus)
+    }
+
+    setTexture(textureState.currentTexture);
+    return vec2(startX, startY);
 }
 
-float af::Window::getTextHeight() {
-    return 0.0f;
+vec2 af::Window::drawText(const std::string& text, float startX, float startY, float scale) {
+    return drawText(text, startX, startY, HAlign::Left, VAlign::Bottom, scale);
 }
 
-float af::Window::getTextWidth(char c) {
-    return 0.0f;
-}
-
-float af::Window::getTextHeight(char c) {
-    return 0.0f;
-}
-
-vec2 af::Window::getTextSize(char c) {
+vec2 af::Window::drawText(const std::string& text, int start, int end, float startX, float startY, float scale) {
+    // TODO still;
+    todo("we still need to implement text rendering like we did last time");
     return vec2();
 }
 
-//Texture af::Window::getTextTexture() {
-    // return Texture();
-    // TODO
-//}
-
-vec2 af::Window::drawText(std::string text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
-    return vec2();
-}
-
-vec2 af::Window::drawText(std::string text, float startX, float startY, float scale) {
-    return vec2();
-}
-
-vec2 af::Window::drawText(std::string text, int start, int end, float startX, float startY, float scale) {
-    return vec2();
-}
-
-float af::Window::getTextStringHeight(std::string s) {
+float af::Window::getTextStringHeight(const std::string& s) {
     return 0.0f;
 }
 
-float af::Window::getTextStringHeight(std::string s, int start, int end) {
+float af::Window::getTextStringHeight(const std::string& s, int start, int end) {
     return 0.0f;
 }
 
-float af::Window::getTextStringWidth(std::string s) {
+float af::Window::getTextStringWidth(const std::string& s) {
     return 0.0f;
 }
 
@@ -687,7 +698,7 @@ void af::Window::flush() {
 void af::Window::swapBuffers() {
     flush();
     // s_framebufferManager.Use(null);
-    setModelMatrix(glm::identity<mat4>());
+    setModel(glm::identity<mat4>());
 
     glfwSwapBuffers(window);
 
@@ -708,10 +719,9 @@ void af::Window::cartesian2D(float scaleX, float scaleY, float offsetX, float of
     float height = scaleY * windowSize.height;
 
     mat4 viewMatrix = translation(vec3(offsetX - width / 2, offsetY - height / 2, 0));
-
     mat4 projectionMatrix = scale(vec3(2.0f / width, 2.0f / height, 1));
 
-    // s_shaderManager.SetViewMatrix(viewMatrix);
+    setView(viewMatrix);
     setProjection(projectionMatrix);
     glDepthFunc(GL_LEQUAL);
 }
@@ -744,10 +754,6 @@ void af::Window::orthographic(float width, float height, float depthNear, float 
     setProjection(ortho);
 }
 
-void af::Window::setProjection(mat4 matrix) {
-    // s_shaderManager.SetProjectionMatrix(matrix);
-}
-
 void af::Window::setBackfaceCulling(bool onOrOff) {
     if (onOrOff) {
         glEnable(GL_CULL_FACE);
@@ -755,10 +761,6 @@ void af::Window::setBackfaceCulling(bool onOrOff) {
     else {
         glDisable(GL_CULL_FACE);
     }
-}
-
-void af::Window::setTransform(mat4 matrix) {
-    // s_shaderManager.SetModelMatrix(matrix);
 }
 
 void af::Window::setDrawColor(vec4 col) {
@@ -850,25 +852,26 @@ void af::Window::setTexture(Texture* texture) {
     }
 }
 
-void af::Window::setModelMatrix(mat4 matrix) {
+void af::Window::setModel(mat4 matrix) {
     flush();
 
     shaderState.model = matrix;
     shaderState.currentShader->setModel(matrix);
 }
 
-void af::Window::setProjectionMatrix(mat4 matrix) {
-    flush();
-
-    shaderState.projection = matrix;
-    shaderState.currentShader->setProjection(matrix);
-}
-
-void af::Window::setViewMatrix(mat4 matrix) {
+void af::Window::setView(mat4 matrix) {
     flush();
 
     shaderState.view = matrix;
     shaderState.currentShader->setView(matrix);
+}
+
+
+void af::Window::setProjection(mat4 matrix) {
+    flush();
+
+    shaderState.projection = matrix;
+    shaderState.currentShader->setProjection(matrix);
 }
 
 void af::Window::useShader(Shader* s, bool updateUniforms) {

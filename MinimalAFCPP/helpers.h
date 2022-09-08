@@ -51,11 +51,14 @@ inline void printArray(T* arr, const std::string& name, int len) {
 }
 
 typedef unsigned int uint;
+typedef unsigned char uint8;
 typedef glm::vec2 vec2;
+typedef glm::ivec2 ivec2;
 typedef glm::vec3 vec3;
 typedef glm::vec4 vec4;
 typedef glm::mat4x4 mat4;
 typedef glm::quat quat;
+typedef std::string string;
 
 inline mat4 translation(vec3 t) {
 	return glm::translate(glm::identity<mat4>(), t);

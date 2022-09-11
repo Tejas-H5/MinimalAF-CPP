@@ -6,6 +6,20 @@
 
 using namespace af;
 
+
+unsigned char* rToRgba(unsigned char* src, int w, int h) {
+    int len = 4 * w * h;
+    unsigned char* rgbaBuffer = new unsigned char[len];
+    for (int i = 0, iSrc = 0; i < len; i += 4, iSrc++) {
+        for (int j = 0; j < 3; j++) {
+            rgbaBuffer[i + j] = (unsigned char)0xFF;
+        }
+
+        rgbaBuffer[i + 3] = src[iSrc];
+    }
+    return rgbaBuffer;
+}
+
 af::Font::Font(const std::string& fontName, int fontSizePx) : sizePx(fontSizePx), fontName(fontName) {
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
@@ -31,13 +45,16 @@ af::Font::Font(const std::string& fontName, int fontSizePx) : sizePx(fontSizePx)
             continue;
         }
 
-        Texture* tex = new Texture(
-            face->glyph->bitmap.width,
-            face->glyph->bitmap.rows,
-            1,
-            face->glyph->bitmap.buffer,
+        int w = face->glyph->bitmap.width;
+        int h = face->glyph->bitmap.rows;
+        unsigned char* src = face->glyph->bitmap.buffer;
+        unsigned char* rgbaBuffer = rToRgba(src, w, h);
+
+        Texture* tex = new Texture(w, h, 4, rgbaBuffer,
             TextureImportSettings(FilteringType::Bilinear, ClampingType::ClampToEdge)
         );
+
+        delete[] rgbaBuffer;
 
         characters->insert(std::pair<char, Character*>(c, new Character(
             tex,

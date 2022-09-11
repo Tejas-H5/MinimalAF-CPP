@@ -13,7 +13,7 @@ public:
     ~App() {
         delete tex;
         delete font;
-        delete shader;
+        // delete shader;
     }
 
     inline void initialize() override {
@@ -24,7 +24,7 @@ public:
 
         setDrawColor(af::rgb(1, 1, 1));
 
-        font = new af::Font("Source Code Pro", 22);
+        font = new af::Font("Source Code Pro", 55);
         //shader = new af::Shader(
         //    // vertex shader
         //    "#version 330\n"
@@ -63,7 +63,7 @@ public:
 
         setTexture(nullptr);
         setFont(font);
-        drawText("hello there", 0, 0, 1);
+        drawText("hello there", getWidth()/2, getHeight()/2, af::HAlign::Center, af::VAlign::Center);
     }
 
     inline void update() override {}

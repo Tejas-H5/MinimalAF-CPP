@@ -36,13 +36,12 @@ namespace af {
 		Font(const std::string& fontName, int fontSizePx);
 		~Font();
 
-		inline bool getChar(char c, Character** out) {
+		inline Character* getChar(char c) {
 			if (characters->count(c) == 0) {
 				return false;
 			}
 
-			out[0] = characters->at(c);
-			return true;
+			return characters->at(c);
 		}
 	};
 }

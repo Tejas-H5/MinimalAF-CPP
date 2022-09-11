@@ -143,10 +143,15 @@ void af::Window::setTitle(const std::string& title) {
 }
 
 SizeI af::Window::getSize() {
-    SizeI windowSize;
-    glfwGetWindowSize(window, &windowSize.width, &windowSize.height);
-
     return windowSize;
+}
+
+int af::Window::getWidth() {
+    return windowSize.width;
+}
+
+int af::Window::getHeight() {
+    return windowSize.height;
 }
 
 // ---- Rendering functions
@@ -214,15 +219,15 @@ void af::Window::drawRect(float x0, float y0, float x1, float y1, float u0, floa
 }
 
 void af::Window::drawRect(Rect rect, Rect uvs) {
-    drawRect(rect.X0, rect.Y0, rect.X1, rect.Y1, uvs.X0, uvs.Y0, uvs.X1, uvs.Y1);
+    drawRect(rect.x0, rect.y0, rect.x1, rect.y1, uvs.x0, uvs.y0, uvs.x1, uvs.y1);
 }
 
 void af::Window::drawRect(Rect rect) {
-    drawRect(rect.X0, rect.Y0, rect.X1, rect.Y1);
+    drawRect(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
 void af::Window::drawRectOutline(float thickness, Rect rect) {
-    drawRectOutline(thickness, rect.X0, rect.Y0, rect.X1, rect.Y1);
+    drawRectOutline(thickness, rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
 void af::Window::drawRectOutline(float thickness, float x0, float y0, float x1, float y1) {
@@ -629,10 +634,65 @@ void af::Window::setFont(Font* font) {
 
 
 vec2 af::Window::drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
+    vec2 caratPos = vec2(startX, startY);
+
+    Character* ch = fontState.currentFont->getChar('T');
+    float textHeight = scale * (float)(ch->size.y);
+
+    switch (vAlign) {
+        case VAlign::Bottom:
+            caratPos.y = startY + textHeight - textHeight;
+            break;
+        case VAlign::Center:
+            caratPos.y = startY + textHeight / 2.0f - textHeight;
+            break;
+        case VAlign::Top:
+            caratPos.y = startY - textHeight;
+            break;
+    }
+
+    int lineStart = 0;
+    int lineEnd = 0;
+
+    while (lineEnd < text.length()) {
+        lineEnd = text.find('\n', lineStart);
+        if (lineEnd == -1)
+            lineEnd = text.length();
+        else
+            lineEnd++;
+
+        float lineWidth = scale * getTextWidth(text, lineStart, lineEnd);
+
+        switch (hAlign) {
+            case HAlign::Center:
+                caratPos.x = startX -lineWidth / 2.0f;
+                break;
+            case HAlign::Right:
+                caratPos.x = startX -lineWidth;
+                break;
+            default:
+                caratPos.x = startX;
+                break;
+
+        }
+
+        caratPos = drawText(text, lineStart, lineEnd, caratPos.x, caratPos.y, scale);
+        lineStart = lineEnd;
+    }
+
+    return caratPos;
+}
+
+vec2 af::Window::drawText(const std::string& text, float startX, float startY, float scale) {
+    return drawText(text, startX, startY, 0, text.length(), scale);
+}
+
+vec2 af::Window::drawText(const std::string& text, int start, int end, float startX, float startY, float scale) {
     Font* font = fontState.currentFont;
-    for (auto c = text.begin(); c != text.end(); c++) {
-        Character* charInfo;
-        if (!font->getChar(*c, &charInfo)) {
+    auto endStr = text.begin() + end;
+    for (auto c = text.begin() + start; c != endStr; c++) {
+        Character* charInfo = font->getChar(*c);
+        if (!charInfo) {
             continue;
         }
 
@@ -642,7 +702,7 @@ vec2 af::Window::drawText(const std::string& text, float startX, float startY, H
         float w = charInfo->size.x * scale;
         float h = charInfo->size.y * scale;
 
-// reee. TODO: font atlas. rect packing ? nah just a long ass image like I was doing it before
+        // reee. TODO: font atlas. rect packing ? nah just a long ass image like I was doing it before
         setTexture(charInfo->tex);
         drawRect(x, y, x + w, y + h);
 
@@ -653,26 +713,42 @@ vec2 af::Window::drawText(const std::string& text, float startX, float startY, H
     return vec2(startX, startY);
 }
 
-vec2 af::Window::drawText(const std::string& text, float startX, float startY, float scale) {
-    return drawText(text, startX, startY, HAlign::Left, VAlign::Bottom, scale);
+float af::Window::getTextHeight(const std::string& s) {
+    return getTextHeight(s, 0, s.length());
 }
 
-vec2 af::Window::drawText(const std::string& text, int start, int end, float startX, float startY, float scale) {
-    // TODO still;
-    todo("we still need to implement text rendering like we did last time");
-    return vec2();
+float af::Window::getTextHeight(const std::string& s, int start, int end) {
+    int maxHeight = 0;
+    for(int i = start; i < end; i++) {
+        Character *ch = fontState.currentFont->getChar(s[i]);
+        if (!ch) {
+            continue;
+        }
+
+        // TODO: take bearing.y into account
+        if(maxHeight < ch->size.y) {
+            maxHeight = ch->size.y;
+        }
+    }
+
+    return (float)maxHeight;
 }
 
-float af::Window::getTextStringHeight(const std::string& s) {
-    return 0.0f;
+float af::Window::getTextWidth(const std::string& s) {
+    return getTextWidth(s, 0, s.length());
 }
 
-float af::Window::getTextStringHeight(const std::string& s, int start, int end) {
-    return 0.0f;
-}
+float af::Window::getTextWidth(const std::string& s, int start, int end) {
+    int width = 0;
+    for (int i = start; i < end; i++) {
+        Character *ch = fontState.currentFont->getChar(s[i]);
+        if (!ch) {
+            continue;
+        }
 
-float af::Window::getTextStringWidth(const std::string& s) {
-    return 0.0f;
+        width += ch->bearing.x + ch->size.x;
+    }
+    return (float)width;
 }
 
 vec4 af::Window::getClearColor() {
@@ -709,7 +785,7 @@ void af::Window::swapBuffers() {
 void af::Window::setViewport(Rect screenRect) {
     screenRect = screenRect.rectified();
 
-    glViewport((int)screenRect.X0, (int)screenRect.Y0, (int)screenRect.getWidth(), (int)screenRect.getHeight());
+    glViewport((int)screenRect.x0, (int)screenRect.y0, (int)screenRect.getWidth(), (int)screenRect.getHeight());
 }
 
 void af::Window::cartesian2D(float scaleX, float scaleY, float offsetX, float offsetY) {

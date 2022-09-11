@@ -3,6 +3,11 @@
 - Re-implement audio rendering
 - (Re?) implemement testing harness
 
+
+-> Improve and optimize text rendering
+	-> use an array instead of a map for ascii
+	-> render unicode and emoji
+
 Done:
 
 -> Move over Texture class

@@ -153,6 +153,8 @@ namespace af {
 		void setSize(int w, int h);
 		void setTitle(const std::string& title);
 		SizeI getSize();
+		int getWidth();
+		int getHeight();
 
 
 		// --- rendering functions
@@ -209,9 +211,10 @@ namespace af {
 		vec2 drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
 		vec2 drawText(const std::string& text, float startX, float startY, float scale = 1.0f);
 		vec2 drawText(const std::string& text, int start, int end, float startX, float startY, float scale);
-		float getTextStringHeight(const std::string& s);
-		float getTextStringHeight(const std::string& s, int start, int end);
-		float getTextStringWidth(const std::string& s);
+		float getTextHeight(const std::string& s);
+		float getTextHeight(const std::string& s, int start, int end);
+		float getTextWidth(const std::string& s);
+		float getTextWidth(const std::string& s, int start, int end);
 
 		// --- gl stuff
 		vec4 getClearColor();

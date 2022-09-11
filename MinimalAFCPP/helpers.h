@@ -9,6 +9,14 @@
 #include <glm.hpp>
 #include <gtx/quaternion.hpp>
 
+#include<chrono>
+
+
+typedef std::chrono::high_resolution_clock high_resolution_clock;
+typedef std::chrono::steady_clock::time_point time_point;
+typedef std::chrono::seconds seconds;
+typedef std::chrono::milliseconds milliseconds;
+
 inline void print(const std::string& text) {
 	std::cout << text << std::endl;
 }
@@ -52,6 +60,7 @@ inline void printArray(T* arr, const std::string& name, int len) {
 
 typedef unsigned int uint;
 typedef unsigned char uint8;
+
 typedef glm::vec2 vec2;
 typedef glm::ivec2 ivec2;
 typedef glm::vec3 vec3;
@@ -70,4 +79,13 @@ inline mat4 scale(vec3 t) {
 
 inline mat4 rotation(quat r) {
 	return glm::toMat4(r);
+}
+
+inline int find(char* str, int len, char c, int start) {
+	for (int i = start; i < len; i++) {
+		if (str[i] == c) {
+			return i;
+		}
+	}
+	return -1;
 }

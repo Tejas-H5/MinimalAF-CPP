@@ -27,6 +27,8 @@ namespace af {
 		ClampingType clampingType;
 
 	public:
+		inline TextureImportSettings() {}
+
 		inline TextureImportSettings(FilteringType filtering, ClampingType clamping) :
 			filtering(filtering), clampingType(clamping) {}
 	};
@@ -34,17 +36,23 @@ namespace af {
 	class Texture {
 	private:
 		int width, height, numChannels;
-
 		GLuint textureID;
-
 		std::string path;
 		TextureImportSettings settings;
+		bool loaded;
 
 		bool init(unsigned char* data);
 	public:
-		Texture(int width, int height, TextureImportSettings settings);
-		Texture(const std::string& path, TextureImportSettings settings);
-		Texture(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings);
+		inline Texture() : loaded(false) {}
+		inline ~Texture() {
+			std::cout << "Texture destructed" << std::endl;
+			unload();
+		}
+
+		void load(int width, int height, TextureImportSettings settings);
+		void load(const std::string& path, TextureImportSettings settings);
+		void load(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings);
+		void unload();
 
 		// Please use the window.setTexture(this) wrapper instead of this->use(), otherwise state won't be intact anymore
 		inline void use(GLenum textureUnit = GL_TEXTURE0) {
@@ -52,6 +60,5 @@ namespace af {
 			glBindTexture(GL_TEXTURE_2D, textureID);
 		}
 
-		~Texture();
 	};
 }

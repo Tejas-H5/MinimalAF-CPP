@@ -61,7 +61,11 @@ static int LinkProgram(int vertexShader, int fragmentShader) {
     return program;
 }
 
-Shader::Shader(const std::string& vertexSourceIn, const std::string& fragmentSource) {
+void Shader::loadInternal(const std::string& vertexSourceIn, const std::string& fragmentSource) {
+    if (loaded) {
+        unload();
+    }
+
     std::string vertexSource = std::string(vertexSourceIn);
     vertexSource = InsertGlobals(vertexSource);
 
@@ -70,7 +74,6 @@ Shader::Shader(const std::string& vertexSourceIn, const std::string& fragmentSou
     handle = LinkProgram(vertexShader, fragmentShader);
 
     // get locations of all uniforms in the shader
-    uniformLocations = std::map<std::string, GLuint>();
     int numUniforms;
     glGetProgramiv(handle, GL_ACTIVE_UNIFORMS, &numUniforms);
     for (int i = 0; i < numUniforms; i++) {
@@ -86,10 +89,13 @@ Shader::Shader(const std::string& vertexSourceIn, const std::string& fragmentSou
     modelLoc = loc("model");
     viewLoc = loc("view");
     projectionLoc = loc("projection");
+
+    loaded = true;
 }
 
 
-Shader::~Shader() {
+void Shader::unload() {
     glDeleteProgram(handle);
     handle = 0;
+    loaded = false;
 }

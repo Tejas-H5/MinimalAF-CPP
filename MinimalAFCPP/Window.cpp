@@ -39,7 +39,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 Window* Window::s_instance = NULL;
 
-Window::Window(int w, int h, const std::string& title) : meshOutput(NULL) {
+Window::Window(int w, int h, const std::string& title) {
     window = glfwCreateWindow(w, h, title.c_str(), NULL, NULL);
     windowSize = SizeI(w, h);
 
@@ -55,9 +55,10 @@ Window::Window(int w, int h, const std::string& title) : meshOutput(NULL) {
 
 void af::Window::initSelf() {
     // TODO: fine-tune this size
-    meshOutput = new BufferedMeshOutput(8 * 4096, 8 * 4096);
-    internalShader = new InternalShader();
-    shaderState.currentShader = internalShader;
+    meshOutput.init(8 * 4096, 8 * 4096);
+
+    internalShader.init();
+    setShader(&internalShader);
 
     // make a 1x1 white pixel the null texture
     unsigned char* pixel = new unsigned char[] {0xFF, 0xFF, 0xFF, 0xFF};
@@ -65,8 +66,8 @@ void af::Window::initSelf() {
         FilteringType::Bilinear, 
         ClampingType::Repeat
     );
-
-    nullTexture = new Texture(1, 1, 4, pixel, pixelImportSettings);
+    nullTexture.load(1, 1, 4, pixel, pixelImportSettings);
+    nullTexture.use(GL_TEXTURE0);
     delete[] pixel;
 
     glEnable(GL_BLEND);
@@ -79,9 +80,7 @@ Window::~Window() {
 
     Window::s_instance = NULL;
 
-    delete meshOutput;
-    delete internalShader;
-    delete nullTexture;
+    // delete nullTexture;
 }
 
 void af::Window::run() {
@@ -160,13 +159,13 @@ static Vertex vertex2D(float x, float y, float u, float v) {
 }
 
 void af::Window::drawTriangle(Vertex v1, Vertex v2, Vertex v3) {
-    meshOutput->flushIfRequired(3, 3);
+    meshOutput.flushIfRequired(3, 3);
 
-    uint i1 = meshOutput->addVertex(v1);
-    uint i2 = meshOutput->addVertex(v2);
-    uint i3 = meshOutput->addVertex(v3);
+    uint i1 = meshOutput.addVertex(v1);
+    uint i2 = meshOutput.addVertex(v2);
+    uint i3 = meshOutput.addVertex(v3);
 
-    meshOutput->makeTriangle(i1, i2, i3);
+    meshOutput.makeTriangle(i1, i2, i3);
 }
 
 void af::Window::drawTriangle(float x0, float y0, float x1, float y1, float x2, float y2, float u0, float v0, float u1, float v1, float u2, float v2) {
@@ -185,15 +184,15 @@ void af::Window::drawTriangleOutline(float thickness, float x0, float y0, float 
 }
 
 void af::Window::drawQuad(Vertex v1, Vertex v2, Vertex v3, Vertex v4) {
-    meshOutput->flushIfRequired(4, 6);
+    meshOutput.flushIfRequired(4, 6);
 
-    uint i1 = meshOutput->addVertex(v1);
-    uint i2 = meshOutput->addVertex(v2);
-    uint i3 = meshOutput->addVertex(v3);
-    uint i4 = meshOutput->addVertex(v4);
+    uint i1 = meshOutput.addVertex(v1);
+    uint i2 = meshOutput.addVertex(v2);
+    uint i3 = meshOutput.addVertex(v3);
+    uint i4 = meshOutput.addVertex(v4);
 
-    meshOutput->makeTriangle(i1, i2, i3);
-    meshOutput->makeTriangle(i3, i4, i1);
+    meshOutput.makeTriangle(i1, i2, i3);
+    meshOutput.makeTriangle(i3, i4, i1);
 }
 
 void af::Window::drawQuad2D(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float u0, float v0, float u1, float v1, float u2, float v2, float u3, float v3) {
@@ -248,9 +247,9 @@ void af::Window::beginNGon(Vertex v1, int n) {
 
     ngonState.polygonBegun = true;
 
-    meshOutput->flushIfRequired(n, 3 * (n - 2));
+    meshOutput.flushIfRequired(n, 3 * (n - 2));
 
-    ngonState.polygonFirst = meshOutput->addVertex(v1);
+    ngonState.polygonFirst = meshOutput.addVertex(v1);
     ngonState.firstVertex = v1;
     ngonState.polygonCount = 1;
 }
@@ -266,23 +265,23 @@ void af::Window::continueNGon(Vertex v) {
 
     if (ngonState.polygonCount == 1) {
         // just append the second vertex, we can't make a triangle yet
-        ngonState.polygonSecond = meshOutput->addVertex(v);
+        ngonState.polygonSecond = meshOutput.addVertex(v);
         ngonState.secondVertex = v;
         ngonState.polygonCount = 2;
         return;
     }
 
 
-    if (meshOutput->flushIfRequired(1, 3)) {
-        ngonState.polygonFirst = meshOutput->addVertex(ngonState.firstVertex);
-        ngonState.polygonSecond = meshOutput->addVertex(ngonState.secondVertex);
+    if (meshOutput.flushIfRequired(1, 3)) {
+        ngonState.polygonFirst = meshOutput.addVertex(ngonState.firstVertex);
+        ngonState.polygonSecond = meshOutput.addVertex(ngonState.secondVertex);
     }
 
 
     ngonState.polygonCount++;
 
-    uint polygonThird = meshOutput->addVertex(v);
-    meshOutput->makeTriangle(ngonState.polygonFirst, ngonState.polygonSecond, polygonThird);
+    uint polygonThird = meshOutput.addVertex(v);
+    meshOutput.makeTriangle(ngonState.polygonFirst, ngonState.polygonSecond, polygonThird);
 
     ngonState.polygonSecond = polygonThird;
     ngonState.secondVertex = v;
@@ -320,10 +319,10 @@ void af::Window::nlineStartLineSegment(float x, float y, vec2 dir, vec2 perp) {
     Vertex v1 = vertex2D(nlineState.last.x + perp.x, nlineState.last.y + perp.y, 0, 0);
     Vertex v2 = vertex2D(nlineState.last.x - perp.x, nlineState.last.y - perp.y, 0, 0);
 
-    meshOutput->flushIfRequired(2, 0);
+    meshOutput.flushIfRequired(2, 0);
 
-    nlineState.lastV1 = meshOutput->addVertex(v1);
-    nlineState.lastV2 = meshOutput->addVertex(v2);
+    nlineState.lastV1 = meshOutput.addVertex(v1);
+    nlineState.lastV2 = meshOutput.addVertex(v2);
 
     nlineState.lastV1Vert = v1;
     nlineState.lastV2Vert = v2;
@@ -351,9 +350,9 @@ void af::Window::nlineMoveLineSegmentInDirectionOf(float x, float y, bool useAve
     Vertex v3 = vertex2D(nlineState.last.x + perpUsed.x, nlineState.last.y + perpUsed.y, 0, 0);
     Vertex v4 = vertex2D(nlineState.last.x - perpUsed.x, nlineState.last.y - perpUsed.y, 0, 0);
 
-    if (meshOutput->flushIfRequired(4, 6)) {
-        nlineState.lastV1 = meshOutput->addVertex(nlineState.lastV1Vert);
-        nlineState.lastV2 = meshOutput->addVertex(nlineState.lastV2Vert);
+    if (meshOutput.flushIfRequired(4, 6)) {
+        nlineState.lastV1 = meshOutput.addVertex(nlineState.lastV1Vert);
+        nlineState.lastV2 = meshOutput.addVertex(nlineState.lastV2Vert);
     }
 
 
@@ -367,24 +366,24 @@ void af::Window::nlineMoveLineSegmentInDirectionOf(float x, float y, bool useAve
 
     if (v3IsArtifacting || v4IsArtifacting) {
         if (v3IsArtifacting) {
-            nlineState.lastV4 = meshOutput->addVertex(v4);
-            meshOutput->makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV4);
+            nlineState.lastV4 = meshOutput.addVertex(v4);
+            meshOutput.makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV4);
             nlineState.lastV2 = nlineState.lastV4;
             nlineState.lastV2Vert = v4;
         }
         else if (v4IsArtifacting) {
-            nlineState.lastV3 = meshOutput->addVertex(v3);
-            meshOutput->makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV3);
+            nlineState.lastV3 = meshOutput.addVertex(v3);
+            meshOutput.makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV3);
             nlineState.lastV1 = nlineState.lastV3;
             nlineState.lastV1Vert = v3;
         }
     }
     else {
-        nlineState.lastV3 = meshOutput->addVertex(v3);
-        nlineState.lastV4 = meshOutput->addVertex(v4);
+        nlineState.lastV3 = meshOutput.addVertex(v3);
+        nlineState.lastV4 = meshOutput.addVertex(v4);
 
-        meshOutput->makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV3);
-        meshOutput->makeTriangle(nlineState.lastV3, nlineState.lastV2, nlineState.lastV4);
+        meshOutput.makeTriangle(nlineState.lastV1, nlineState.lastV2, nlineState.lastV3);
+        meshOutput.makeTriangle(nlineState.lastV3, nlineState.lastV2, nlineState.lastV4);
 
         nlineState.lastV1 = nlineState.lastV3;
         nlineState.lastV2 = nlineState.lastV4;
@@ -632,65 +631,81 @@ void af::Window::setFont(Font* font) {
     fontState.currentFont = font;
 }
 
+static float getAlignmentX(HAlign hAlign, float lineWidth) {
+    switch (hAlign) {
+    case HAlign::Center:
+        return - lineWidth / 2.0f;
+    case HAlign::Right:
+        return - lineWidth;
+    default:
+        return 0.0f;
+    }
+}
 
-vec2 af::Window::drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
+vec2 af::Window::drawText(char* text, int len, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale) {
     vec2 caratPos = vec2(startX, startY);
 
-    Character* ch = fontState.currentFont->getChar('T');
-    float textHeight = scale * (float)(ch->size.y);
-
-    switch (vAlign) {
-        case VAlign::Bottom:
-            caratPos.y = startY + textHeight - textHeight;
-            break;
-        case VAlign::Center:
-            caratPos.y = startY + textHeight / 2.0f - textHeight;
-            break;
-        case VAlign::Top:
-            caratPos.y = startY - textHeight;
-            break;
-    }
+    float textHeight = getTextHeight();
 
     int lineStart = 0;
     int lineEnd = 0;
 
-    while (lineEnd < text.length()) {
-        lineEnd = text.find('\n', lineStart);
-        if (lineEnd == -1)
-            lineEnd = text.length();
-        else
+    float endX = caratPos.x;
+    float textY = caratPos.y;
+    switch (vAlign) {
+    case VAlign::Bottom:
+        textY = startY + textHeight - textHeight;
+        break;
+    case VAlign::Center:
+        textY = startY + textHeight / 2.0f - textHeight;
+        break;
+    case VAlign::Top:
+        textY = startY - textHeight;
+        break;
+    }
+
+    while (lineEnd < len) {
+        bool isNewLine = false;
+        lineEnd = find(text, len, '\n', lineStart);
+        if (lineEnd == -1) {
+            lineEnd = len;
+        }
+        else {
+            isNewLine = true;
             lineEnd++;
-
-        float lineWidth = scale * getTextWidth(text, lineStart, lineEnd);
-
-        switch (hAlign) {
-            case HAlign::Center:
-                caratPos.x = startX -lineWidth / 2.0f;
-                break;
-            case HAlign::Right:
-                caratPos.x = startX -lineWidth;
-                break;
-            default:
-                caratPos.x = startX;
-                break;
-
         }
 
-        caratPos = drawText(text, lineStart, lineEnd, caratPos.x, caratPos.y, scale);
+        float lineWidth = scale * getTextWidth(text, len, lineStart, lineEnd);
+        float textX = startX + getAlignmentX(hAlign, lineWidth);
+
+        vec2 newCaratPos = drawText(text, len, lineStart, lineEnd, textX, textY, scale);
         lineStart = lineEnd;
+        
+        if (isNewLine) {
+            textY -= getTextHeight();
+            caratPos.y -= getTextHeight();
+        }
+        
+        // really, this should only be set once.
+        if (!isNewLine) {
+            caratPos.x = startX + (newCaratPos.x - textX);
+        }
     }
 
     return caratPos;
 }
 
-vec2 af::Window::drawText(const std::string& text, float startX, float startY, float scale) {
-    return drawText(text, startX, startY, 0, text.length(), scale);
+vec2 af::Window::drawText(char* text, int len, float startX, float startY, float scale) {
+    return drawText(text, len, startX, startY, 0, len, scale);
 }
 
-vec2 af::Window::drawText(const std::string& text, int start, int end, float startX, float startY, float scale) {
+vec2 af::Window::drawText(char* text, int len, int start, int end, float startX, float startY, float scale) {
     Font* font = fontState.currentFont;
-    auto endStr = text.begin() + end;
-    for (auto c = text.begin() + start; c != endStr; c++) {
+    char* endStr = text + len;
+
+    Texture* prev = textureState.currentTexture;
+
+    for (char* c = text + start; c != endStr; c++) {
         Character* charInfo = font->getChar(*c);
         if (!charInfo) {
             continue;
@@ -703,42 +718,26 @@ vec2 af::Window::drawText(const std::string& text, int start, int end, float sta
         float h = charInfo->size.y * scale;
 
         // reee. TODO: font atlas. rect packing ? nah just a long ass image like I was doing it before
-        setTexture(charInfo->tex);
+        setTexture(&charInfo->tex);
         drawRect(x, y, x + w, y + h);
 
         startX += (charInfo->advance >> 6) * scale;  // bitshift by 6 to get value in pixels (2^6 = 64) (this is just what that tutorial said. seems a bit sus)
     }
 
-    setTexture(textureState.currentTexture);
+    setTexture(prev);
     return vec2(startX, startY);
 }
 
-float af::Window::getTextHeight(const std::string& s) {
-    return getTextHeight(s, 0, s.length());
+float af::Window::getTextHeight() {
+    Character* ch = fontState.currentFont->getChar('W');
+    return ch->size.y + ch->size.y / 2;
 }
 
-float af::Window::getTextHeight(const std::string& s, int start, int end) {
-    int maxHeight = 0;
-    for(int i = start; i < end; i++) {
-        Character *ch = fontState.currentFont->getChar(s[i]);
-        if (!ch) {
-            continue;
-        }
-
-        // TODO: take bearing.y into account
-        if(maxHeight < ch->size.y) {
-            maxHeight = ch->size.y;
-        }
-    }
-
-    return (float)maxHeight;
+float af::Window::getTextWidth(char* s, int len) {
+    return getTextWidth(s, len, 0, len);
 }
 
-float af::Window::getTextWidth(const std::string& s) {
-    return getTextWidth(s, 0, s.length());
-}
-
-float af::Window::getTextWidth(const std::string& s, int start, int end) {
+float af::Window::getTextWidth(char* s, int len, int start, int end) {
     int width = 0;
     for (int i = start; i < end; i++) {
         Character *ch = fontState.currentFont->getChar(s[i]);
@@ -768,7 +767,7 @@ void af::Window::clear() {
 }
 
 void af::Window::flush() {
-    meshOutput->flush();
+    meshOutput.flush();
 }
 
 void af::Window::swapBuffers() {
@@ -778,8 +777,8 @@ void af::Window::swapBuffers() {
 
     glfwSwapBuffers(window);
 
-    meshOutput->timesIndexThresholdReached = 0;
-    meshOutput->timesVertexThresholdReached = 0;
+    meshOutput.timesIndexThresholdReached = 0;
+    meshOutput.timesVertexThresholdReached = 0;
 }
 
 void af::Window::setViewport(Rect screenRect) {
@@ -840,12 +839,14 @@ void af::Window::setBackfaceCulling(bool onOrOff) {
 }
 
 void af::Window::setDrawColor(vec4 col) {
-    if (internalShader->getColor()  == col)
+    // floating point comparison tho?
+    // TODO: double check this code
+    if (internalShader.getColor() == col)
         return;
 
     flush();
 
-    internalShader->setColor(col);
+    internalShader.setColor(col);
 }
 
 
@@ -921,7 +922,7 @@ void af::Window::setTexture(Texture* texture) {
 
     textureState.currentTexture = texture;
     if (texture == nullptr) {
-        nullTexture->use(GL_TEXTURE0);
+        nullTexture.use(GL_TEXTURE0);
     }
     else {
         texture->use(GL_TEXTURE0);
@@ -950,11 +951,14 @@ void af::Window::setProjection(mat4 matrix) {
     shaderState.currentShader->setProjection(matrix);
 }
 
-void af::Window::useShader(Shader* s, bool updateUniforms) {
+void af::Window::setShader(Shader* s, bool updateUniforms) {
     if (s == shaderState.currentShader)
         return;
 
+    flush();
+
     shaderState.currentShader = s;
+    s->use();
     
     if (updateUniforms) {
         shaderState.currentShader->setModel(shaderState.model);

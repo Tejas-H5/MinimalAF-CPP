@@ -27,9 +27,15 @@ namespace af {
 
         std::string vertexSource;
         std::string fragmentSource;
+        bool loaded = false;
     public:
-        Shader(const std::string& vertexSource, const std::string& fragmentSource);
-        ~Shader();
+        void loadInternal(const std::string& vertexSource, const std::string& fragmentSource);
+        void unload();
+
+        inline virtual ~Shader() {
+            std::cout << "Shader destructed" << std::endl;
+            unload();
+        }
 
         inline void use() {
             glUseProgram(handle);
@@ -91,25 +97,28 @@ namespace af {
     private:
         vec4 color; uint colorLoc;
     public:
-        InternalShader() : Shader(
-            // vertex shader
-            "#version 330\n"
-            "{{globals}}\n"
-            "out vec2 uv0;\n"
-            "void main(){\n"
-            "    gl_Position =  projection * view * model * vec4(position, 1);\n"
-            "    uv0 = uv;\n"
-            "}\n",
-            // fragment shader
-            "#version 330\n"
-            "uniform vec4 color;\n"
-            "uniform sampler2D sampler;\n"
-            "in vec2 uv0;\n"
-            "void main(){\n"
-            "    vec4 texColor = texture2D(sampler, uv0.xy);\n"
-            "    gl_FragColor = color * texColor;\n"
-            "}\n"
-        ), color(vec4(0,0,0,0)), colorLoc(0) {
+        void init() {
+            loadInternal(
+                // vertex shader
+                "#version 330\n"
+                "{{globals}}\n"
+                "out vec2 uv0;\n"
+                "void main(){\n"
+                "    gl_Position =  projection * view * model * vec4(position, 1);\n"
+                "    uv0 = uv;\n"
+                "}\n",
+                // fragment shader
+                "#version 330\n"
+                "uniform vec4 color;\n"
+                "uniform sampler2D sampler;\n"
+                "in vec2 uv0;\n"
+                "void main(){\n"
+                "    vec4 texColor = texture2D(sampler, uv0.xy);\n"
+                "    gl_FragColor = color * texColor;\n"
+                "}\n"
+            );
+
+            color = vec4(0,0,0,0);
             colorLoc = loc("color");
         }
 

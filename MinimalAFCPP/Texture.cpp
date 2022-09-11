@@ -51,7 +51,8 @@ bool af::Texture::init(unsigned char* data) {
 	return true;
 }
 
-af::Texture::Texture(int width, int height, TextureImportSettings settings) : settings(settings) {
+void af::Texture::load(int width, int height, TextureImportSettings settings) {
+	this->settings = settings;
 	this->width = width;
 	this->height = height;
 	this->numChannels = 4;
@@ -60,7 +61,9 @@ af::Texture::Texture(int width, int height, TextureImportSettings settings) : se
 	init(nullptr);
 }
 
-af::Texture::Texture(const std::string& path, TextureImportSettings settings) : settings(settings) {
+void af::Texture::load(const std::string& path, TextureImportSettings settings) {
+	this->settings = settings;
+
 	// stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &numChannels, 0);
 
@@ -75,9 +78,9 @@ af::Texture::Texture(const std::string& path, TextureImportSettings settings) : 
 	stbi_image_free(data);
 }
 
-af::Texture::Texture(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings)
-	: settings(settings)
+void af::Texture::load(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings)
 {
+	this->settings = settings;
 	this->width = width;
 	this->height = height;
 	this->numChannels = numChannels;
@@ -85,6 +88,6 @@ af::Texture::Texture(int width, int height, int numChannels, unsigned char* data
 	init(data);
 }
 
-af::Texture::~Texture() {
+void af::Texture::unload() {
 	glDeleteTextures(1, &textureID);
 }

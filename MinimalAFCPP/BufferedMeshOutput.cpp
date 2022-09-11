@@ -1,7 +1,9 @@
 #include "BufferedMeshOutput.h"
 
-af::BufferedMeshOutput::BufferedMeshOutput(int vertexBufferSize, int indexBufferSize) :
-	currentIndexIndex(0), currentVertexIndex(0) {
+void af::BufferedMeshOutput::init(int vertexBufferSize, int indexBufferSize) {
+	currentIndexIndex = 0;
+	currentVertexIndex = 0;
+
 	// they must be multiples of 3
 	vertexBufferSize = (1 + vertexBufferSize / 3) * 3;
 	indexBufferSize = (1 + indexBufferSize / 3) * 3;

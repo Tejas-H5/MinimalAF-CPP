@@ -95,9 +95,9 @@ namespace af {
 		CurrentShaderState shaderState;
 		CurrentFontState fontState;
 
-		BufferedMeshOutput* meshOutput;
-		InternalShader* internalShader;
-		Texture* nullTexture;	// a 1x1 white square
+		BufferedMeshOutput meshOutput;
+		InternalShader internalShader;
+		Texture nullTexture;	// a 1x1 white square
 
 		void initSelf();
 																																										
@@ -208,13 +208,12 @@ namespace af {
 		void setFont(Font* font);
 		// Texture getTextTexture();
 
-		vec2 drawText(const std::string& text, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
-		vec2 drawText(const std::string& text, float startX, float startY, float scale = 1.0f);
-		vec2 drawText(const std::string& text, int start, int end, float startX, float startY, float scale);
-		float getTextHeight(const std::string& s);
-		float getTextHeight(const std::string& s, int start, int end);
-		float getTextWidth(const std::string& s);
-		float getTextWidth(const std::string& s, int start, int end);
+		vec2 drawText(char* text, int len, float startX, float startY, HAlign hAlign, VAlign vAlign, float scale = 1.0f);
+		vec2 drawText(char* text, int len, float startX, float startY, float scale = 1.0f);
+		vec2 drawText(char* text, int len, int start, int end, float startX, float startY, float scale);
+		float getTextHeight();
+		float getTextWidth(char* s, int len);
+		float getTextWidth(char* s, int len, int start, int end);
 
 		// --- gl stuff
 		vec4 getClearColor();
@@ -235,7 +234,7 @@ namespace af {
 		void setView(mat4 matrix);
 		void setBackfaceCulling(bool onOrOff);
 		void setDrawColor(vec4 col);
-		void useShader(Shader* s, bool updateUniforms = true);
+		void setShader(Shader* s, bool updateUniforms = true);
 
 		// --- stencilling 
 		void startStencillingWhileDrawing(bool inverseStencil = false);

@@ -1,18 +1,21 @@
--> Re-implement text rendering, possibly with FreeType
-	- https://learnopengl.com/In-Practice/Text-Rendering
+-> Reimplement tests from c# project
+	-> Move over the element
+	- (Re?) implemement testing harness
+
+Stretch goal:
+- Improve and optimize text rendering
+	- render unicode and emoji
 - Re-implement audio rendering
-- (Re?) implemement testing harness
-
-
--> Improve and optimize text rendering
-	-> use an array instead of a map for ascii
-	-> render unicode and emoji
 
 Done:
 
+-> Re-implement text rendering, possibly with FreeType
+	- https://learnopengl.com/In-Practice/Text-Rendering
 -> Move over Texture class
 -> Move over all the render context functions
 -> internal shader
+	-> use an array instead of a map for ascii
+
 
 Issues:
 

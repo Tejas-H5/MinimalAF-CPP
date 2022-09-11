@@ -53,9 +53,6 @@ public:
     inline void render() override {
         setDrawColor(af::rgb(1, 1, 1));
 
-        drawRect(0, 0, 200, 200);
-
-
         float fps = renderFpsTimer.tick(1000);
         int len = sprintf(framerateStrBuffer, "r: %F, u: %F", fps, updateFps);
 

@@ -704,7 +704,7 @@ vec2 af::Window::drawText(char* text, int len, int start, int end, float startX,
     char* endStr = text + len;
 
     Texture* prev = textureState.currentTexture;
-
+    setTexture(font->getTexture());
     for (char* c = text + start; c != endStr; c++) {
         Character* charInfo = font->getChar(*c);
         if (!charInfo) {
@@ -718,8 +718,8 @@ vec2 af::Window::drawText(char* text, int len, int start, int end, float startX,
         float h = charInfo->size.y * scale;
 
         // reee. TODO: font atlas. rect packing ? nah just a long ass image like I was doing it before
-        setTexture(&charInfo->tex);
-        drawRect(x, y, x + w, y + h);
+        Rect uvs = charInfo->getTexCoord();
+        drawRect(x, y, x + w, y + h, uvs.x0, uvs.y0, uvs.x1, uvs.y1);
 
         startX += (charInfo->advance >> 6) * scale;  // bitshift by 6 to get value in pixels (2^6 = 64) (this is just what that tutorial said. seems a bit sus)
     }
@@ -729,8 +729,11 @@ vec2 af::Window::drawText(char* text, int len, int start, int end, float startX,
 }
 
 float af::Window::getTextHeight() {
-    Character* ch = fontState.currentFont->getChar('W');
-    return ch->size.y + ch->size.y / 2;
+    if (fontState.currentFont == nullptr) {
+        return 0;
+    }
+
+    return fontState.currentFont->getHeight();
 }
 
 float af::Window::getTextWidth(char* s, int len) {

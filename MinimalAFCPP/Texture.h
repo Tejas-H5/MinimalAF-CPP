@@ -49,6 +49,9 @@ namespace af {
 			unload();
 		}
 
+		inline int getWidth() { return width; }
+		inline int getHeight() { return height; }
+
 		void load(int width, int height, TextureImportSettings settings);
 		void load(const std::string& path, TextureImportSettings settings);
 		void load(int width, int height, int numChannels, unsigned char* data, TextureImportSettings settings);

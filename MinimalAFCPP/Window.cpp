@@ -1,23 +1,6 @@
-#include"Window.h"
-#define _USE_MATH_DEFINES
-#include<math.h>
+
 
 using namespace af;
-
-int af::init() {
-    if (!glfwInit()) {
-        print("couldn't init glfw");
-        return -1;
-    }
-
-
-    return 0;
-}
-
-void af::uninit() {
-    print("glfwTerminate();");
-    glfwTerminate();
-}
 
 
 void af::Window::onResize(GLFWwindow* window, int width, int height) {
@@ -51,11 +34,16 @@ Window::Window(int w, int h, const std::string& title) {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     Window::s_instance = this;
-}
 
-void af::Window::initSelf() {
+    glfwMakeContextCurrent(window);
+
+    if (glewInit() != GLEW_OK) {
+        print("glewInit() != GLEW_OK");
+        return;
+    }
+
     // TODO: fine-tune this size
-    meshOutput.init(8 * 4096, 8 * 4096);
+    meshOutput.init(4 * 4096, 8 * 4096);
 
     internalShader.init();
     setShader(&internalShader);
@@ -63,7 +51,7 @@ void af::Window::initSelf() {
     // make a 1x1 white pixel the null texture
     unsigned char* pixel = new unsigned char[] {0xFF, 0xFF, 0xFF, 0xFF};
     TextureImportSettings pixelImportSettings = TextureImportSettings(
-        FilteringType::Bilinear, 
+        FilteringType::Bilinear,
         ClampingType::Repeat
     );
     nullTexture.load(1, 1, 4, pixel, pixelImportSettings);
@@ -81,41 +69,6 @@ Window::~Window() {
     Window::s_instance = NULL;
 
     // delete nullTexture;
-}
-
-void af::Window::run() {
-    glfwMakeContextCurrent(window);
-
-    if (glewInit() != GLEW_OK) {
-        print("glewInit() != GLEW_OK");
-        return;
-    }
-
-    initSelf();
-
-    initialize();
-
-    // this is an update/render loop.
-    while (!glfwWindowShouldClose(window)) {
-
-        /* Update part */ {
-            glfwPollEvents();
-
-
-            // TODO: make render and update happen at different intervals
-            // TODO: also give them the deltatime somehow. static class or pass it in as an arg here
-            update();
-        }
-
-        /* Render part*/ {
-            glClear(GL_COLOR_BUFFER_BIT);
-            cartesian2D(1, 1);
-
-            render();
-        }
-
-        swapBuffers();
-    }
 }
 
 void af::Window::setState(WindowMode mode) {
@@ -151,6 +104,23 @@ int af::Window::getWidth() {
 
 int af::Window::getHeight() {
     return windowSize.height;
+}
+
+bool af::Window::shouldClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void af::Window::pollEvents() {
+    glfwPollEvents();
+}
+
+void af::Window::setScreenRect(Rect rect) {
+    // TODO
+}
+
+Rect af::Window::getScreenRect() {
+    // TODO
+    return Rect();
 }
 
 // ---- Rendering functions

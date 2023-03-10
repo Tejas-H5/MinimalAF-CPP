@@ -49,13 +49,16 @@ Window::Window(int w, int h, const std::string& title) {
     }
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     Window::s_instance = this;
-}
 
-void af::Window::initSelf() {
+    glfwMakeContextCurrent(window);
+    if (glewInit() != GLEW_OK) {
+        print("glewInit() != GLEW_OK");
+        return;
+    }
+
     // TODO: fine-tune this size
-    meshOutput.init(8 * 4096, 8 * 4096);
+    meshOutput.init(4 * 4096, 8 * 4096);
 
     internalShader.init();
     setShader(&internalShader);
@@ -81,41 +84,6 @@ Window::~Window() {
     Window::s_instance = NULL;
 
     // delete nullTexture;
-}
-
-void af::Window::run() {
-    glfwMakeContextCurrent(window);
-
-    if (glewInit() != GLEW_OK) {
-        print("glewInit() != GLEW_OK");
-        return;
-    }
-
-    initSelf();
-
-    initialize();
-
-    // this is an update/render loop.
-    while (!glfwWindowShouldClose(window)) {
-
-        /* Update part */ {
-            glfwPollEvents();
-
-
-            // TODO: make render and update happen at different intervals
-            // TODO: also give them the deltatime somehow. static class or pass it in as an arg here
-            update();
-        }
-
-        /* Render part*/ {
-            glClear(GL_COLOR_BUFFER_BIT);
-            cartesian2D(1, 1);
-
-            render();
-        }
-
-        swapBuffers();
-    }
 }
 
 void af::Window::setState(WindowMode mode) {
@@ -968,4 +936,13 @@ void af::Window::setShader(Shader* s, bool updateUniforms) {
         shaderState.currentShader->setView(shaderState.view);
         shaderState.currentShader->setModel(shaderState.projection);
     }
+}
+
+
+bool af::Window::shouldClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void af::Window::pollEvents() {
+    glfwPollEvents();
 }

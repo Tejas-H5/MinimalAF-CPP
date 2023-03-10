@@ -27,7 +27,7 @@ namespace af {
 		ClampingType clampingType;
 
 	public:
-		inline TextureImportSettings() {}
+		inline TextureImportSettings() : filtering(FilteringType::NearestNeighbour), clampingType(ClampingType::ClampToEdge) {}
 
 		inline TextureImportSettings(FilteringType filtering, ClampingType clamping) :
 			filtering(filtering), clampingType(clamping) {}

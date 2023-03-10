@@ -21,7 +21,7 @@ target_sources(MinimalAFCPP PUBLIC
 	"Color.h"
 	"BufferedMeshOutput.h" "BufferedMeshOutput.cpp" 
 	"Datatypes/Vertex.h" "Datatypes/Rect.h"
- )
+  "App.h")
 
 # TODO: Add tests and install targets if needed.
 target_link_libraries(MinimalAFCPP

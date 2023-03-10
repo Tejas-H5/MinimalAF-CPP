@@ -99,8 +99,6 @@ namespace af {
 		InternalShader internalShader;
 		Texture nullTexture;	// a 1x1 white square
 
-		void initSelf();
-																																										
 /*
 * 
 * 
@@ -141,14 +139,9 @@ namespace af {
 		void onResize(GLFWwindow* window, int width, int height);
 		void onTextureLoaded(Texture* t);
 
-		virtual void initialize() = 0;
-		virtual void update() = 0;
-		virtual void render() = 0;
-
 		Window(int w, int h, const std::string& title);
 		virtual ~Window();
 
-		void run();
 		void setState(WindowMode mode);
 		void setSize(int w, int h);
 		void setTitle(const std::string& title);
@@ -178,7 +171,9 @@ namespace af {
 		void continueNGon(Vertex v);
 		void endNGon();
 
-		// TODO: fix shoddy implementation, possibly rewrite
+		// TODO: fix shoddy implementation, possibly rewrite.
+		// One idea is rather than having a high level line API, we simply add two vertices to the line each time.
+		// This will eliminate 99% of our problems with this thing
 		void beginNLine(float x, float y, float thickness, CapType cap);
 		void continueNLine(float x, float y, bool useAverage = true);
 		void endNLine(float x, float y);
@@ -236,6 +231,9 @@ namespace af {
 		void setDrawColor(vec4 col);
 		void setShader(Shader* s, bool updateUniforms = true);
 
+		bool shouldClose();
+		void pollEvents();
+
 		// --- stencilling 
 		void startStencillingWhileDrawing(bool inverseStencil = false);
 		void startStencillingWithoutDrawing(bool inverseStencil = false);
@@ -246,7 +244,6 @@ namespace af {
 		// --- texture management
 		void setTexture(Texture* texture);
 		inline Texture* getTexture() { return textureState.currentTexture; }
-
 	};
 }
 
